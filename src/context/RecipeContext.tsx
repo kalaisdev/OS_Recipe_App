@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Recipe } from '../types/recipe';
 import { supabase } from '../lib/supabase';
+import { useAuth } from './AuthContext';
 
 interface RecipeContextType {
   recipes: Recipe[];
@@ -14,24 +15,22 @@ interface RecipeContextType {
 
 const RecipeContext = createContext<RecipeContextType | undefined>(undefined);
 
-const getUserId = () => {
-  let userId = localStorage.getItem('temp_user_id');
-  if (!userId) {
-    userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    localStorage.setItem('temp_user_id', userId);
-  }
-  return userId;
-};
-
 export const RecipeProvider = ({ children }: { children: ReactNode }) => {
+  const { user } = useAuth();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [savedRecipeIds, setSavedRecipeIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchRecipes();
-    fetchSavedRecipes();
-  }, []);
+    if (user) {
+      fetchRecipes();
+      fetchSavedRecipes();
+    } else {
+      setRecipes([]);
+      setSavedRecipeIds([]);
+      setLoading(false);
+    }
+  }, [user]);
 
   const fetchRecipes = async () => {
     try {
@@ -42,7 +41,6 @@ export const RecipeProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) throw error;
 
-      const userId = getUserId();
       const formattedRecipes: Recipe[] = (data || []).map((recipe) => ({
         id: recipe.id,
         title: recipe.title,
@@ -54,7 +52,7 @@ export const RecipeProvider = ({ children }: { children: ReactNode }) => {
         difficulty: recipe.difficulty as 'Easy' | 'Medium' | 'Hard',
         author: recipe.author,
         createdAt: recipe.created_at.split('T')[0],
-        isOwner: recipe.user_id === userId,
+        isOwner: recipe.user_id === user?.id,
         isPublic: recipe.is_public,
       }));
 
@@ -67,12 +65,13 @@ export const RecipeProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const fetchSavedRecipes = async () => {
+    if (!user) return;
+
     try {
-      const userId = getUserId();
       const { data, error } = await supabase
         .from('saved_recipes')
         .select('recipe_id')
-        .eq('user_id', userId);
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
@@ -83,7 +82,8 @@ export const RecipeProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const toggleSaved = async (recipeId: string) => {
-    const userId = getUserId();
+    if (!user) return;
+
     const isCurrentlySaved = savedRecipeIds.includes(recipeId);
 
     try {
@@ -92,14 +92,14 @@ export const RecipeProvider = ({ children }: { children: ReactNode }) => {
           .from('saved_recipes')
           .delete()
           .eq('recipe_id', recipeId)
-          .eq('user_id', userId);
+          .eq('user_id', user.id);
 
         if (error) throw error;
         setSavedRecipeIds((prev) => prev.filter((id) => id !== recipeId));
       } else {
         const { error } = await supabase
           .from('saved_recipes')
-          .insert({ recipe_id: recipeId, user_id: userId });
+          .insert({ recipe_id: recipeId, user_id: user.id });
 
         if (error) throw error;
         setSavedRecipeIds((prev) => [...prev, recipeId]);
@@ -112,8 +112,9 @@ export const RecipeProvider = ({ children }: { children: ReactNode }) => {
   const isSaved = (recipeId: string) => savedRecipeIds.includes(recipeId);
 
   const addRecipe = async (recipe: Omit<Recipe, 'id' | 'createdAt' | 'isOwner'>) => {
+    if (!user) return;
+
     try {
-      const userId = getUserId();
       const { data, error } = await supabase
         .from('recipes')
         .insert({
@@ -126,7 +127,7 @@ export const RecipeProvider = ({ children }: { children: ReactNode }) => {
           difficulty: recipe.difficulty,
           author: recipe.author,
           is_public: recipe.isPublic,
-          user_id: userId,
+          user_id: user.id,
         })
         .select()
         .single();
