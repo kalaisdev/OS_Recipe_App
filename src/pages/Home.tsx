@@ -4,7 +4,7 @@ import { RecipeCard } from '../components/RecipeCard';
 import { useRecipes } from '../context/RecipeContext';
 
 export const Home = () => {
-  const { recipes } = useRecipes();
+  const { recipes, loading } = useRecipes();
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredRecipes = recipes.filter((recipe) =>
@@ -36,7 +36,12 @@ export const Home = () => {
           </div>
         </div>
 
-        {filteredRecipes.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-16">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+            <p className="mt-4 text-gray-600">Loading recipes...</p>
+          </div>
+        ) : filteredRecipes.length === 0 ? (
           <div className="text-center py-16">
             <div className="text-gray-400 mb-4">
               <Search className="w-16 h-16 mx-auto" />

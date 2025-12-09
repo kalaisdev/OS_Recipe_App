@@ -77,7 +77,7 @@ export const RecipeDetail = () => {
               </div>
 
               <button
-                onClick={() => toggleSaved(recipe.id)}
+                onClick={() => void toggleSaved(recipe.id)}
                 className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-semibold transition-all ${
                   saved
                     ? 'bg-emerald-600 text-white hover:bg-emerald-700'

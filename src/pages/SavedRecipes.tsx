@@ -3,7 +3,7 @@ import { RecipeCard } from '../components/RecipeCard';
 import { useRecipes } from '../context/RecipeContext';
 
 export const SavedRecipes = () => {
-  const { recipes, savedRecipeIds } = useRecipes();
+  const { recipes, savedRecipeIds, loading } = useRecipes();
 
   const savedRecipes = recipes.filter((recipe) =>
     savedRecipeIds.includes(recipe.id)
@@ -22,7 +22,12 @@ export const SavedRecipes = () => {
           </p>
         </div>
 
-        {savedRecipes.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-16">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+            <p className="mt-4 text-gray-600">Loading saved recipes...</p>
+          </div>
+        ) : savedRecipes.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-2xl shadow-sm border border-gray-100">
             <div className="text-gray-400 mb-4">
               <Bookmark className="w-16 h-16 mx-auto" />

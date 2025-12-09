@@ -3,7 +3,7 @@ import { ChefHat, Edit, Eye } from 'lucide-react';
 import { useRecipes } from '../context/RecipeContext';
 
 export const MyRecipes = () => {
-  const { recipes } = useRecipes();
+  const { recipes, loading } = useRecipes();
 
   const myRecipes = recipes.filter((recipe) => recipe.isOwner);
 
@@ -20,7 +20,12 @@ export const MyRecipes = () => {
           </p>
         </div>
 
-        {myRecipes.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-16">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+            <p className="mt-4 text-gray-600">Loading your recipes...</p>
+          </div>
+        ) : myRecipes.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-2xl shadow-sm border border-gray-100">
             <div className="text-gray-400 mb-4">
               <ChefHat className="w-16 h-16 mx-auto" />

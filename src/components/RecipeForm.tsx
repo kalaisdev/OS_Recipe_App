@@ -26,7 +26,7 @@ export const RecipeForm = ({ editRecipe }: RecipeFormProps) => {
 
   const [showSuccess, setShowSuccess] = useState(false);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     const recipeData = {
@@ -42,9 +42,9 @@ export const RecipeForm = ({ editRecipe }: RecipeFormProps) => {
     };
 
     if (editRecipe) {
-      updateRecipe(editRecipe.id, recipeData);
+      await updateRecipe(editRecipe.id, recipeData);
     } else {
-      addRecipe(recipeData);
+      await addRecipe(recipeData);
     }
 
     setShowSuccess(true);
